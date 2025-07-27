@@ -1,0 +1,103 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stockItems StockItem[]
+  sales      Sale[]
+  losses     Loss[]
+
+  @@map("organizations")
+}
+
+model StockItem {
+  id             String   @id @default(cuid())
+  name           String
+  category       String
+  unit           String   // e.g., "kg", "pieces", "liters"
+  costPerUnit    Float
+  currentStock   Float    @default(0)
+  minStockLevel  Float    @default(0)
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  losses       Loss[]
+
+  @@map("stock_items")
+}
+
+model MenuItem {
+  id          String   @id @default(cuid())
+  name        String
+  category    String
+  costPrice   Float    // Original cost to make
+  sellingPrice Float   // Price sold to customers
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sales  Sale[]
+  losses Loss[]
+
+  @@map("menu_items")
+}
+
+model Sale {
+  id             String   @id @default(cuid())
+  quantity       Int
+  unitPrice      Float
+  costPrice      Float    // Cost to make this item
+  totalRevenue   Float    // quantity * unitPrice
+  totalCost      Float    // quantity * costPrice
+  profit         Float    // totalRevenue - totalCost
+  saleDate       DateTime @default(now())
+  notes          String?
+  organizationId String
+  menuItemId     String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  menuItem     MenuItem     @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  @@map("sales")
+}
+
+model Loss {
+  id             String   @id @default(cuid())
+  type           String   // "staff_consumption", "spoilage", "waste", "other"
+  quantity       Int
+  costPrice      Float    // Original cost per unit
+  expectedProfit Float    // Expected profit that was lost
+  totalLoss      Float    // quantity * (costPrice + expectedProfit)
+  lossDate       DateTime @default(now())
+  reason         String?
+  organizationId String
+  menuItemId     String?
+  stockItemId    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  menuItem     MenuItem?    @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+  stockItem    StockItem?   @relation(fields: [stockItemId], references: [id], onDelete: SetNull)
+
+  @@map("losses")
+}
