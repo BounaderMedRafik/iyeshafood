@@ -34,7 +34,7 @@ const Layout: React.FC<LayoutProps> = ({
             <div className="flex items-center">
               <Building2 className="h-8 w-8 text-blue-600" />
               <h1 className="ml-3 text-xl font-bold text-gray-900">
-                IYESHA-FOOD Restaurant Management
+                IYSHA-FOOD Restaurant Management
               </h1>
             </div>
           </div>
